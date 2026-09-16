@@ -187,7 +187,7 @@ export default function Dashboard() {
             href="/kelola"
             className="rounded-xl bg-sky-500/15 px-3.5 py-2 text-sm font-semibold text-sky-200 ring-1 ring-sky-400/30 transition hover:bg-sky-500/25"
           >
-            ⚙ Kelola
+            Kelola
           </Link>
           <PasangPwa />
           <button
