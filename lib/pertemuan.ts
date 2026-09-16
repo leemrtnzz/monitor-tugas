@@ -58,7 +58,6 @@ function sesiTambahan(sks: number, ke: number) {
 
 function tipePertemuan(sks: number, ke: number): TipePertemuan {
   if (sesiTambahan(sks, ke)) return "Mentari (Online)";
-  if (sks < 3 && ke === 2) return "Mentari (Online)";
   return "Tatap Muka";
 }
 
