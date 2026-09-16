@@ -6,6 +6,7 @@ PWA untuk memantau tenggat tugas kuliah. Setiap tugas menampilkan:
 - sisa waktu hidup (berdetak tiap detik) dan sisa hari kalender,
 - **timeline** dari terbit → tenggat yang warnanya makin **merah** saat tenggat makin dekat,
 - **pengingat teks seram** berjenjang: aman → waspada → mendesak → kritis (≤ 24 jam) → terlewat.
+- Deskripsi tugas mendukung **baris baru** (Enter) dan ditampilkan apa adanya di kartu.
 
 Ada juga panel **CRUD** di `/kelola` untuk menambah/mengubah/menghapus mata kuliah dan tugas —
 setiap operasi wajib memasukkan PIN dari env `APP_PIN` (tanpa auth, lihat bagian CRUD + PIN).
@@ -101,6 +102,30 @@ values (
   '20.00'
 );
 ```
+
+## Proxy API (browser tidak lagi akses Supabase)
+
+Semua **pembacaan** data dari browser lewat proxy milik aplikasi sendiri:
+
+| endpoint                      | isi                                                        |
+| ----------------------------- | ---------------------------------------------------------- |
+| `GET /api/publik/tugas`       | daftar tugas + data mata kuliahnya (digabung di server)     |
+| `GET /api/publik/mata-kuliah` | daftar mata kuliah (termasuk `sks` & `tanggal_mulai`)       |
+
+Keduanya **tanpa PIN** (sama seperti halaman monitor yang memang publik) dan tidak di-cache
+(`cache: "no-store"`). Prosesnya:
+
+1. `lib/data.ts` di browser memanggil `/api/publik/...`.
+2. Route handler memakai `lib/data-server.ts` → `lib/supabase-server.ts` untuk query Supabase.
+3. Hasilnya dikirim balik sebagai `{ data: { daftar, kolomPertemuanSiap } }`.
+
+Untungnya: kredensial Supabase **tidak pernah ikut ke browser**, dan RLS/CORS tidak lagi jadi
+urusan klien. Cara memastikannya: setelah `npm run build`, cari isi bundle klien —
+`grep -r "supabase.co" .next/static` harus kosong.
+
+Karena itu `NEXT_PUBLIC_SUPABASE_ANON_KEY` sudah tidak wajib ber-prefix `NEXT_PUBLIC_`: pakai
+`SUPABASE_ANON_KEY` kalau mau lebih rapi (kedua nama tetap didukung). `NEXT_PUBLIC_SUPABASE_URL`
+boleh dibiarkan seperti sekarang.
 
 ## CRUD + PIN (tanpa auth)
 
@@ -198,6 +223,7 @@ app/kelola/page.tsx       panel CRUD → components/kelola/Kelola
 app/pertemuan/page.tsx    jadwal pertemuan realtime → components/DaftarPertemuan
 app/~offline/page.tsx     halaman fallback saat offline
 app/api/pin/route.ts      verifikasi PIN
+app/api/publik/           PROXY READ publik: /api/publik/tugas & /api/publik/mata-kuliah
 app/api/tugas/route.ts    GET + POST tugas
 app/api/tugas/[id]/       PATCH + DELETE tugas
 app/api/mata-kuliah/      GET + POST mata kuliah, PATCH + DELETE per id
@@ -209,11 +235,14 @@ lib/deadline.ts           hitung sisa hari, progress timeline, tingkat bahaya, t
 lib/pesan.ts              kumpulan teks pengingat berjenjang
 lib/format.ts             format tanggal/jam/durasi bahasa Indonesia
 lib/validasi.ts           validasi input CRUD
+lib/data-server.ts        baca tabel dari Supabase (khusus server, dipakai proxy)
+lib/data.ts               klien proxy: muatTugas() & muatMataKuliah() lewat /api/publik/*
 lib/api-server.ts         gerbang PIN + helper respons API
 lib/api-client.ts         fetch CRUD (PIN otomatis di header)
 lib/pin.ts, pin-client.ts verifikasi PIN di server & penyimpanan PIN di sesi browser
-lib/supabase.ts           klien Supabase anon (baca di browser)
 lib/supabase-server.ts    klien Supabase server (service role kalau ada)
+lib/pertemuan.ts          aturan jadwal pertemuan + status realtime
+lib/jam.ts                jam realtime & penanda "sudah terpasang di klien"
 lib/ulid.ts               generator ULID untuk kolom id
 next.config.ts            withPWA (aktif saat build produksi)
 scripts/generate-icons.mjs generator ikon PNG tanpa dependency

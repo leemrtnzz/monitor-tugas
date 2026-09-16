@@ -253,7 +253,7 @@ export default function Dashboard() {
       </section>
 
       <footer className="mt-10 text-center text-[11px] text-slate-600">
-        Timeline makin penuh, warna makin merah. Itu tandanya jangan ditunda lagi.
+        Made with <span className="text-red-500">❤</span> Sistem Informasi
       </footer>
     </div>
   );

@@ -47,8 +47,8 @@ export default function KartuTugas({ tugas, info, sekarang }: Props) {
           <h3 className="mt-2 text-lg leading-snug font-semibold text-slate-50">{tugas.judul}</h3>
         </div>
 
-        <div className="flex flex-col items-end gap-1.5">
-          <span className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ${tema.chip}`}>
+        <div className="flex flex-col gap-1.5">
+          <span className={`rounded-full flex items-center justify-center py-1 text-xs font-bold tracking-wide uppercase ${tema.chip}`}>
             {tema.ikon} {tema.label}
           </span>
           <span className="text-xs font-medium text-slate-400" title={formatTenggat(info.tenggat)}>
@@ -58,7 +58,9 @@ export default function KartuTugas({ tugas, info, sekarang }: Props) {
       </div>
 
       {tugas.deskripsi && (
-        <p className="mt-3 pl-2 text-sm leading-relaxed text-slate-300">{tugas.deskripsi}</p>
+        <p className="mt-3 pl-2 text-sm leading-relaxed whitespace-pre-line text-slate-300">
+          {tugas.deskripsi}
+        </p>
       )}
 
       <dl className="mt-4 grid grid-cols-2 gap-2.5 pl-2 sm:grid-cols-4">

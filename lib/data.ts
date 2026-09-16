@@ -1,109 +1,67 @@
-import { galatKonfigurasi, supabase } from "./supabase";
-import type { MataKuliah, Tugas, TugasLengkap } from "./types";
+import type { MataKuliah, TugasLengkap } from "./types";
 
 export type HasilMuat = {
   daftar: TugasLengkap[];
   galat: string | null;
 };
 
-function pesanGalat(tabel: string, pesan: string) {
-  const bawah = pesan.toLowerCase();
-  const petunjuk =
-    bawah.includes("row-level security") || bawah.includes("permission denied")
-      ? " Tabel belum mengizinkan role anon membaca — tambahkan policy SELECT untuk role anon di Supabase."
-      : "";
-  return `Gagal membaca tabel ${tabel}: ${pesan}.${petunjuk}`;
-}
-
-const KOLOM_MK_PERTEMUAN = "id,nama,semester,hari,sks,tanggal_mulai";
-const KOLOM_MK_DASAR = "id,nama,semester,hari";
-
-/**
- * Bentuk respons select yang dinetralkan: kolom yang diminta bisa berbeda
- * (dengan atau tanpa sks/tanggal_mulai), jadi tipenya tidak diikat ke satu select.
- */
-type HasilSelectMk = { data: unknown; error: { message: string } | null };
-
 export type HasilMataKuliah = {
   daftar: MataKuliah[];
   galat: string | null;
-  /** false kalau kolom `sks` / `tanggal_mulai` belum ada di tabel. */
+  /** false kalau kolom `sks` / `tanggal_mulai` belum ada di tabel mata_kuliah. */
   kolomPertemuanSiap: boolean;
 };
 
-/** PostgREST menyebut kolom yang tidak ada dengan pola ini — kalau kena, pakai select dasar. */
-function perluFallbackKolom(pesan: string) {
-  const bawah = pesan.toLowerCase();
-  return (
-    bawah.includes("sks") ||
-    bawah.includes("tanggal_mulai") ||
-    bawah.includes("schema cache") ||
-    (bawah.includes("column") && bawah.includes("does not exist"))
-  );
-}
+type Amplop<T> = { data?: T | null; error?: string | null };
 
 /**
- * Ambil tabel `mata_kuliah`. Kolom `sks` & `tanggal_mulai` (dipakai halaman
- * Pertemuan) dicoba dulu; kalau belum ada di database, otomatis fallback ke
- * kolom dasar supaya sisa aplikasi tetap jalan.
+ * Semua pembacaan data lewat PROXY API milik aplikasi ini
+ * (`/api/publik/...`), bukan langsung ke Supabase dari browser:
+ * kredensial Supabase tetap di server dan browser tidak perlu tahu apa pun
+ * soal RLS/CORS.
  */
-export async function muatMataKuliah(): Promise<HasilMataKuliah> {
-  if (!supabase) {
-    return { daftar: [], galat: galatKonfigurasi, kolomPertemuanSiap: false };
+async function ambilDariProxy<T>(jalur: string): Promise<{ data: T | null; galat: string | null }> {
+  try {
+    const respons = await fetch(jalur, { cache: "no-store" });
+    const isi = (await respons.json().catch(() => null)) as Amplop<T> | null;
+
+    if (!respons.ok) {
+      return {
+        data: null,
+        galat: isi?.error ?? `Gagal memuat data dari server (HTTP ${respons.status}).`,
+      };
+    }
+
+    return { data: isi?.data ?? null, galat: null };
+  } catch {
+    return { data: null, galat: "Tidak bisa menghubungi server. Cek koneksimu." };
   }
-
-  let kolomPertemuanSiap = true;
-  let hasil: HasilSelectMk = await supabase
-    .from("mata_kuliah")
-    .select(KOLOM_MK_PERTEMUAN)
-    .order("nama", { ascending: true });
-
-  if (hasil.error && perluFallbackKolom(hasil.error.message)) {
-    kolomPertemuanSiap = false;
-    hasil = await supabase
-      .from("mata_kuliah")
-      .select(KOLOM_MK_DASAR)
-      .order("nama", { ascending: true });
-  }
-
-  if (hasil.error) {
-    return {
-      daftar: [],
-      galat: pesanGalat("mata_kuliah", hasil.error.message),
-      kolomPertemuanSiap,
-    };
-  }
-
-  const daftar = ((hasil.data ?? []) as unknown as Partial<MataKuliah>[]).map((mk) => ({
-    id: mk.id ?? "",
-    nama: mk.nama ?? "(tanpa nama)",
-    semester: mk.semester ?? null,
-    hari: mk.hari ?? null,
-    sks: mk.sks ?? null,
-    tanggal_mulai: mk.tanggal_mulai ?? null,
-  }));
-
-  return { daftar, galat: null, kolomPertemuanSiap };
 }
-export async function muatTugas(): Promise<HasilMuat> {
-  if (!supabase) return { daftar: [], galat: galatKonfigurasi };
 
-  const [hasilMk, hasilTugas] = await Promise.all([
-    muatMataKuliah(),
-    supabase.from("tugas").select("*").order("tanggal_dikumpulkan", { ascending: true }),
-  ]);
+/** Daftar mata kuliah (dipakai halaman Pertemuan). */
+export async function muatMataKuliah(): Promise<HasilMataKuliah> {
+  const hasil = await ambilDariProxy<{ daftar: MataKuliah[]; kolomPertemuanSiap: boolean }>(
+    "/api/publik/mata-kuliah",
+  );
 
-  if (hasilMk.galat) return { daftar: [], galat: hasilMk.galat };
-  if (hasilTugas.error) return { daftar: [], galat: pesanGalat("tugas", hasilTugas.error.message) };
-
-  const daftarTugas = (hasilTugas.data ?? []) as unknown as Tugas[];
-  const petaMk = new Map(hasilMk.daftar.map((mk) => [mk.id, mk]));
+  if (hasil.galat || !hasil.data) {
+    return { daftar: [], galat: hasil.galat ?? "Data mata kuliah kosong.", kolomPertemuanSiap: true };
+  }
 
   return {
-    daftar: daftarTugas.map((tugas) => ({
-      ...tugas,
-      mata_kuliah: petaMk.get(tugas.id_mata_kuliah) ?? null,
-    })),
+    daftar: hasil.data.daftar ?? [],
     galat: null,
+    kolomPertemuanSiap: hasil.data.kolomPertemuanSiap ?? true,
   };
+}
+
+/** Daftar tugas + mata kuliahnya (dipakai halaman Monitor Tugas). */
+export async function muatTugas(): Promise<HasilMuat> {
+  const hasil = await ambilDariProxy<{ daftar: TugasLengkap[] }>("/api/publik/tugas");
+
+  if (hasil.galat || !hasil.data) {
+    return { daftar: [], galat: hasil.galat ?? "Data tugas kosong." };
+  }
+
+  return { daftar: hasil.data.daftar ?? [], galat: null };
 }
