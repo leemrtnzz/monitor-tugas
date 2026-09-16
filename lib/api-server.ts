@@ -21,6 +21,9 @@ export function pesanSupabase(pesan: string) {
   if (bawah.includes("foreign key") || bawah.includes("violates foreign key constraint")) {
     return `${pesan} — mata kuliah tersebut masih dipakai oleh data tugas lain.`;
   }
+  if (bawah.includes("sks") || bawah.includes("tanggal_mulai") || bawah.includes("schema cache")) {
+    return `${pesan} — kolom \`sks\` / \`tanggal_mulai\` sepertinya belum ada di tabel mata_kuliah. Jalankan SQL migrasi di README.md.`;
+  }
   return pesan;
 }
 

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await ctx.klien
     .from("mata_kuliah")
-    .select("id,nama,semester,hari")
+    .select("*")
     .order("nama", { ascending: true });
 
   if (error) return jawabGalat(pesanSupabase(error.message), 500);

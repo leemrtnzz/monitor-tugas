@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { mintaApi } from "@/lib/api-client";
 import { DAFTAR_HARI } from "@/lib/deadline";
+import { keTanggalInput } from "@/lib/format";
 import type { MataKuliah, Tugas } from "@/lib/types";
 import { Input, Kolom, Pilih, Pesan, Tombol } from "./Ui";
 
@@ -11,6 +12,8 @@ type NilaiForm = {
   nama: string;
   semester: string;
   hari: string;
+  sks: string;
+  tanggal_mulai: string;
 };
 
 type Props = {
@@ -18,11 +21,25 @@ type Props = {
   tugas: Tugas[];
   onBerubah: () => void;
   onPinSalah: () => void;
+  /** false kalau kolom `sks` / `tanggal_mulai` belum ada di tabel mata_kuliah. */
+  kolomPertemuanSiap: boolean;
 };
 
-const FORM_KOSONG: NilaiForm = { nama: "", semester: "", hari: "Rabu" };
+const FORM_KOSONG: NilaiForm = {
+  nama: "",
+  semester: "",
+  hari: "Rabu",
+  sks: "2",
+  tanggal_mulai: "",
+};
 
-export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSalah }: Props) {
+export default function KelolaMataKuliah({
+  mataKuliah,
+  tugas,
+  onBerubah,
+  onPinSalah,
+  kolomPertemuanSiap,
+}: Props) {
   const [nilai, setNilai] = useState<NilaiForm | null>(null);
   const [menyimpan, setMenyimpan] = useState(false);
   const [galat, setGalat] = useState<string | null>(null);
@@ -43,7 +60,13 @@ export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSa
     setPesan(null);
     setMenyimpan(true);
 
-    const muatan = { nama: nilai.nama, semester: nilai.semester, hari: nilai.hari };
+    const muatan = {
+      nama: nilai.nama,
+      semester: nilai.semester,
+      hari: nilai.hari,
+      // Dikirim hanya kalau kolomnya ada, supaya tidak error "column does not exist".
+      ...(kolomPertemuanSiap ? { sks: nilai.sks, tanggal_mulai: nilai.tanggal_mulai } : {}),
+    };
 
     const hasil = nilai.id
       ? await mintaApi(`/api/mata-kuliah/${nilai.id}`, { metode: "PATCH", body: muatan })
@@ -100,6 +123,13 @@ export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSa
         </Tombol>
       </div>
 
+      {!kolomPertemuanSiap && (
+        <Pesan
+          jenis="info"
+          teks="Kolom sks & tanggal_mulai belum ada di tabel mata_kuliah, jadi form jadwal pertemuan disembunyikan. Jalankan SQL migrasi di README.md (ringkasannya ada di halaman Pertemuan) lalu muat ulang."
+        />
+      )}
+
       {galat && <Pesan jenis="galat" teks={galat} />}
       {pesan && <Pesan jenis="sukses" teks={pesan} />}
       {mataKuliah.length === 0 && (
@@ -150,6 +180,32 @@ export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSa
                 ))}
               </Pilih>
             </Kolom>
+
+            {kolomPertemuanSiap && (
+              <>
+                <Kolom label="SKS" petunjuk="2 → 14 pertemuan, 3 → 21 pertemuan">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={8}
+                    value={nilai.sks}
+                    onChange={(event) => setNilai({ ...nilai, sks: event.target.value })}
+                    placeholder="2"
+                  />
+                </Kolom>
+
+                <Kolom
+                  label="Tanggal mulai pertemuan"
+                  petunjuk="Pertemuan berikutnya otomatis +7 hari"
+                >
+                  <Input
+                    type="date"
+                    value={nilai.tanggal_mulai}
+                    onChange={(event) => setNilai({ ...nilai, tanggal_mulai: event.target.value })}
+                  />
+                </Kolom>
+              </>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -172,7 +228,10 @@ export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSa
             <p className="truncate font-semibold text-slate-100">{mk.nama}</p>
             <p className="mt-0.5 text-xs text-slate-500">
               {mk.semester ? `Semester ${mk.semester}` : "Semester belum diisi"}
-              {mk.hari ? ` · ${mk.hari}` : ""} · {jumlahTugas.get(mk.id) ?? 0} tugas ·{" "}
+              {mk.hari ? ` · ${mk.hari}` : ""}
+              {mk.sks ? ` · ${mk.sks} SKS` : ""}
+              {mk.tanggal_mulai ? ` · mulai ${mk.tanggal_mulai}` : " · tanggal mulai belum diisi"} ·{" "}
+              {jumlahTugas.get(mk.id) ?? 0} tugas ·{" "}
               <span className="font-mono text-[10px]">{mk.id}</span>
             </p>
           </div>
@@ -204,6 +263,8 @@ export default function KelolaMataKuliah({ mataKuliah, tugas, onBerubah, onPinSa
                       nama: mk.nama ?? "",
                       semester: mk.semester ? String(mk.semester) : "",
                       hari: mk.hari ?? "Rabu",
+                      sks: mk.sks ? String(mk.sks) : "",
+                      tanggal_mulai: keTanggalInput(mk.tanggal_mulai),
                     });
                   }}
                 >

@@ -18,10 +18,6 @@ export default function HalamanKelola() {
           <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-slate-50">
             Kelola Mata Kuliah &amp; Tugas
           </h1>
-          <p className="mt-1.5 text-sm text-slate-400">
-            Tambah, ubah, dan hapus data. Setiap operasi mengirim PIN (<code>APP_PIN</code>) ke
-            server.
-          </p>
         </div>
 
         <Link

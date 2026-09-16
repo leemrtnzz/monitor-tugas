@@ -111,6 +111,28 @@ export function validasiMataKuliah(
     isi.hari = hari;
   }
 
+  if ("sks" in masukan) {
+    const bersih = teks(masukan.sks);
+    if (bersih === null) {
+      isi.sks = null;
+    } else {
+      const angka = Number(bersih);
+      if (!Number.isInteger(angka) || angka < 1 || angka > 8) {
+        return { ok: false, pesan: "SKS harus berupa angka antara 1 sampai 8." };
+      }
+      isi.sks = angka;
+    }
+  }
+
+  if ("tanggal_mulai" in masukan) {
+    const bersih = teks(masukan.tanggal_mulai);
+    const nilaiTanggal = tanggal(masukan.tanggal_mulai);
+    if (bersih && !nilaiTanggal) {
+      return { ok: false, pesan: "Tanggal mulai pertemuan tidak valid. Gunakan format YYYY-MM-DD." };
+    }
+    isi.tanggal_mulai = nilaiTanggal;
+  }
+
   if (Object.keys(isi).length === 0) {
     return { ok: false, pesan: "Tidak ada perubahan yang dikirim." };
   }

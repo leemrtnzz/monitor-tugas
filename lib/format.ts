@@ -18,6 +18,13 @@ const tanggalJam = new Intl.DateTimeFormat("id-ID", {
   hour12: false,
 });
 
+const jamLengkap = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
 /** "Rabu, 23 September 2026" */
 export const formatTanggal = (tanggal: Date) => tanggalPanjang.format(tanggal);
 
@@ -26,6 +33,9 @@ export const formatTanggalSingkat = (tanggal: Date) => tanggalSingkat.format(tan
 
 /** "20.00" (gaya Indonesia) */
 export const formatJam = (tanggal: Date) => tanggalJam.format(tanggal).replace(":", ".");
+
+/** "20.15.16" — jam realtime yang ikut berdetak tiap detik. */
+export const formatJamLengkap = (tanggal: Date) => jamLengkap.format(tanggal).replace(/:/g, ".");
 
 /** "Rabu, 23 September 2026 · 20.00" */
 export const formatTenggat = (tanggal: Date) => `${formatTanggal(tanggal)} · ${formatJam(tanggal)}`;

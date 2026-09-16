@@ -16,7 +16,7 @@ export const PESAN: Record<Tingkat, Pesan[]> = {
       saran: "Kirim apa pun yang sudah ada sekarang juga dan minta dispensasi. Diam terlalu lama lebih berbahaya daripada tugas yang belum sempurna.",
     },
     {
-      seruan: "💀 WAKTU HABIS. Tidak ada tombol undo untuk tenggat yang sudah lewat.",
+      seruan: "WAKTU HABIS. Tidak ada tombol undo untuk tenggat yang sudah lewat.",
       saran: "Kabari dosen hari ini, siapkan alasan yang jujur, dan kejar pengumpulan susulan.",
     },
     {
@@ -26,21 +26,21 @@ export const PESAN: Record<Tingkat, Pesan[]> = {
   ],
   kritis: [
     {
-      seruan: "🔥 KURANG DARI 24 JAM. Kalau kamu masih rebahan, tugas ini bakal jadi mayat di daftar nilai.",
+      seruan: "KURANG DARI 24 JAM. Kalau kamu masih rebahan, tugas ini bakal jadi mayat di daftar nilai.",
       saran: "Tutup semua tab, matikan notifikasi, kerjakan sekarang. Tidak ada waktu lain selain sekarang.",
     },
     {
-      seruan: "⚠️ Ini hitungan JAM, bukan hitungan hari. Alarm terakhir sudah berbunyi keras.",
+      seruan: "Ini hitungan JAM, bukan hitungan hari. Alarm terakhir sudah berbunyi keras.",
       saran: "Kerjakan versi paling sederhana dulu supaya bisa dikumpulkan, baru dipercantik kalau masih sempat.",
     },
     {
-      seruan: "⏱️ Tenggat ini sudah berdiri tepat di belakangmu dan siap menerkam.",
+      seruan: "Tenggat ini sudah berdiri tepat di belakangmu dan siap menerkam.",
       saran: "Satu jam fokus sekarang jauh lebih murah daripada lima jam penyesalan besok.",
     },
   ],
   mendesak: [
     {
-      seruan: "🕷️ Tiga hari terasa lama, tapi penundaan sudah mulai menagih harga.",
+      seruan: "Tiga hari terasa lama, tapi penundaan sudah mulai menagih harga.",
       saran: "Pecah jadi tiga bagian kecil dan selesaikan bagian pertama malam ini.",
     },
     {
@@ -50,7 +50,7 @@ export const PESAN: Record<Tingkat, Pesan[]> = {
   ],
   waspada: [
     {
-      seruan: "⏳ Waktu terus berjalan tanpa minta izin, dan separuh masanya sudah kamu lewati.",
+      seruan: "Waktu terus berjalan tanpa minta izin, dan separuh masanya sudah kamu lewati.",
       saran: "Sisihkan satu jam hari ini, atau minggu depan rasa panikmu akan dua kali lebih berat.",
     },
     {
@@ -60,7 +60,7 @@ export const PESAN: Record<Tingkat, Pesan[]> = {
   ],
   aman: [
     {
-      seruan: "😌 Masih longgar, tapi jangan terlena oleh rasa longgar ini.",
+      seruan: "Masih longgar, tapi jangan terlena oleh rasa longgar ini.",
       saran: "Mulai sedikit sekarang; besok kamu akan berterima kasih pada dirimu sendiri.",
     },
     {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import BersihkanSwDev from "@/components/BersihkanSwDev";
+import NavUtama from "@/components/NavUtama";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <BersihkanSwDev />
+        <NavUtama />
         {children}
       </body>
     </html>

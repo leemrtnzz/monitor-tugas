@@ -3,6 +3,10 @@ export type MataKuliah = {
   nama: string;
   semester: number | null;
   hari: string | null;
+  /** Jumlah SKS — dipakai untuk menghitung jumlah pertemuan (14 atau 21). */
+  sks: number | null;
+  /** Tanggal pertemuan pertama (YYYY-MM-DD) — pertemuan berikutnya tiap 7 hari. */
+  tanggal_mulai: string | null;
 };
 
 export type Tugas = {

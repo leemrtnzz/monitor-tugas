@@ -76,6 +76,10 @@ export default function Kelola() {
     setGalat(null);
   }
 
+  // PostgREST tidak mengembalikan kolom yang belum ada, jadi kita deteksi dari baris pertama.
+  const kolomPertemuanSiap =
+    mataKuliah.length === 0 || ("sks" in mataKuliah[0] && "tanggal_mulai" in mataKuliah[0]);
+
   if (!pin) {
     return <KunciPin onSukses={simpanPin} />;
   }
@@ -166,6 +170,7 @@ export default function Kelola() {
           tugas={tugas}
           onBerubah={segarkan}
           onPinSalah={kunci}
+          kolomPertemuanSiap={kolomPertemuanSiap}
         />
       )}
     </div>

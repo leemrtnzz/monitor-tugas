@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import KartuTugas from "@/components/KartuTugas";
 import PasangPwa from "@/components/PasangPwa";
 import { muatTugas } from "@/lib/data";
 import { TEMA, hitungInfo, type Tingkat } from "@/lib/deadline";
-import { formatTanggal } from "@/lib/format";
+import { formatJamLengkap, formatTanggal } from "@/lib/format";
+import { useJamSekarang, useSudahTerpasang } from "@/lib/jam";
 import type { TugasLengkap, TugasTerhitung } from "@/lib/types";
 
 type Saringan = "semua" | "sehari" | "tiga-hari" | "minggu" | "terlewat";
@@ -19,46 +19,6 @@ const FILTER: { id: Saringan; label: string; cocok: (tingkat: Tingkat) => boolea
   { id: "terlewat", label: "Terlewat", cocok: (t) => t === "terlewat" },
 ];
 
-const jamLengkap = new Intl.DateTimeFormat("id-ID", {
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false,
-});
-
-/**
- * Jam disimpan di luar React lalu dibaca lewat useSyncExternalStore.
- * Snapshot di server bernilai 0, jadi render pertama (SSR + hidrasi) memakai
- * kerangka dan bebas dari hydration mismatch.
- */
-let snapshotDetik = 0;
-
-function berlanggananDetik(callback: () => void) {
-  const perbarui = () => {
-    snapshotDetik = Date.now();
-    callback();
-  };
-
-  perbarui();
-  const timer = window.setInterval(perbarui, 1000);
-  return () => window.clearInterval(timer);
-}
-
-const ambilSnapshotDetik = () => snapshotDetik;
-const ambilSnapshotServer = () => 0;
-
-/**
- * Penanda "sudah terpasang di klien". Server dan render hidrasi pertama
- * sama-sama membaca false, jadi atribut/teks tombol muat ulang dijamin sama
- * antara HTML server dan render klien pertama (bebas hydration mismatch).
- */
-function berlanggananTerpasang() {
-  return () => {};
-}
-
-const ambilTerpasang = () => true;
-const ambilBelumTerpasang = () => false;
-
 export default function Dashboard() {
   const [daftar, setDaftar] = useState<TugasLengkap[]>([]);
   const [galat, setGalat] = useState<string | null>(null);
@@ -66,18 +26,8 @@ export default function Dashboard() {
   const [saringan, setSaringan] = useState<Saringan>("semua");
   const [cari, setCari] = useState("");
 
-  const msSekarang = useSyncExternalStore(
-    berlanggananDetik,
-    ambilSnapshotDetik,
-    ambilSnapshotServer,
-  );
-  const sekarang = useMemo(() => (msSekarang ? new Date(msSekarang) : null), [msSekarang]);
-
-  const sudahTerpasang = useSyncExternalStore(
-    berlanggananTerpasang,
-    ambilTerpasang,
-    ambilBelumTerpasang,
-  );
+  const sekarang = useJamSekarang();
+  const sudahTerpasang = useSudahTerpasang();
 
   const tarikData = useCallback(async () => {
     const hasil = await muatTugas();
@@ -165,16 +115,14 @@ export default function Dashboard() {
     <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-24 sm:px-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
             Monitor Tugas Kuliah
           </h1>
           <p className="mt-1.5 text-sm text-slate-400">
             {sekarang ? (
               <>
                 {formatTanggal(sekarang)} · pukul{" "}
-                <span className="font-semibold text-slate-200">
-                  {jamLengkap.format(sekarang).replace(/:/g, ".")}
-                </span>
+                <span className="font-semibold text-slate-200">{formatJamLengkap(sekarang)}</span>
               </>
             ) : (
               "Menyiapkan jam…"
@@ -183,12 +131,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/kelola"
-            className="rounded-xl bg-sky-500/15 px-3.5 py-2 text-sm font-semibold text-sky-200 ring-1 ring-sky-400/30 transition hover:bg-sky-500/25"
-          >
-            Kelola
-          </Link>
+
           <PasangPwa />
           <button
             type="button"
