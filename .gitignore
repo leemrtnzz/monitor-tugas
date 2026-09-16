@@ -38,4 +38,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# pwa (dibuat otomatis oleh @ducanh2912/next-pwa saat build produksi)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
 next-env.d.ts

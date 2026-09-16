@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Berkas yang di-generate @ducanh2912/next-pwa saat build produksi:
+    "public/sw.js",
+    "public/sw.js.map",
+    "public/workbox-*.js",
+    "public/swe-worker-*.js",
+    "public/fallback-*.js",
   ]),
 ]);
 
