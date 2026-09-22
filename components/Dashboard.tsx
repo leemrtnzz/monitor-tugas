@@ -9,10 +9,11 @@ import { formatJamLengkap, formatTanggal } from "@/lib/format";
 import { useJamSekarang, useSudahTerpasang } from "@/lib/jam";
 import type { TugasLengkap, TugasTerhitung } from "@/lib/types";
 
-type Saringan = "semua" | "sehari" | "tiga-hari" | "minggu" | "terlewat";
+type Saringan = "semua" | "sehari" | "tiga-hari" | "minggu" | "terlewat" | "selain-terlewat";
 
 const FILTER: { id: Saringan; label: string; cocok: (tingkat: Tingkat) => boolean }[] = [
   { id: "semua", label: "Semua", cocok: () => true },
+  { id: "selain-terlewat", label: "Selain Terlewat", cocok: (t) => t !== "terlewat"},
   { id: "sehari", label: "≤ 24 jam", cocok: (t) => t === "kritis" },
   { id: "tiga-hari", label: "≤ 3 hari", cocok: (t) => t === "kritis" || t === "mendesak" },
   { id: "minggu", label: "≤ 7 hari", cocok: (t) => t !== "aman" && t !== "terlewat" },
@@ -227,7 +228,7 @@ export default function Dashboard() {
             />
           ))}
 
-        {!sedangMemuat && tersaring.map((item) => (
+        {!sedangMemuat && tersaring.map(item => (
           <KartuTugas
             key={item.id}
             tugas={item}
